@@ -13,7 +13,7 @@ function App() {
 
   useEffect(() => {
     const ws = new WebSocket(
-      "ws://real-time-app-f218663aca6f.herokuapp.com/ws"
+      "wss://real-time-app-f218663aca6f.herokuapp.com/ws"
     );
     wsRef.current = ws;
 
