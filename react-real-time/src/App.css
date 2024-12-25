@@ -1,76 +1,89 @@
 /* 全体レイアウト */
-body {
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-  background-color: #e5ddd5; /* LINE風の背景色 */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-div {
-  width: 100%;
-  max-width: 400px;
+.chat-container {
   display: flex;
   flex-direction: column;
-  background-color: white;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  height: 100vh;
+  background-color: #e5ddd5; /* LINE風の背景色 */
+  font-family: Arial, sans-serif;
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
-div > div {
+/* ヘッダー */
+.chat-header {
+  background-color: #00c300; /* LINEのヘッダー色 */
+  color: white;
+  text-align: center;
+  padding: 10px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* メッセージエリア */
+.chat-messages {
   flex: 1;
   padding: 10px;
   overflow-y: auto;
-  background-color: #e5ddd5;
+  background-color: #e5ddd5; /* メッセージエリアの背景色 */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-p {
+/* メッセージスタイル */
+.message {
   max-width: 70%;
-  margin: 5px 0;
   padding: 10px;
-  border-radius: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.4;
   word-wrap: break-word;
 }
 
-p:nth-child(odd) {
+.message.sent {
+  align-self: flex-end;
+  background-color: #dcf8c6; /* 自分のメッセージの色 */
+  color: black;
+}
+
+.message.received {
   align-self: flex-start;
   background-color: white;
+  color: black;
   border: 1px solid #ddd;
 }
 
-p:nth-child(even) {
-  align-self: flex-end;
-  background-color: #dcf8c6;
+/* 入力エリア */
+.chat-input {
+  display: flex;
+  padding: 10px;
+  background-color: #f0f0f0;
+  gap: 10px;
+  align-items: center;
 }
 
-input {
+.chat-input-box {
+  flex: 1;
   padding: 10px;
-  font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 20px;
-  flex: 1;
-  margin-right: 10px;
   outline: none;
+  font-size: 14px;
 }
 
-button {
+.chat-send-button {
   padding: 10px 15px;
-  background-color: #00c300;
+  background-color: #00c300; /* 送信ボタンの色 */
   color: white;
   border: none;
   border-radius: 20px;
   cursor: pointer;
+  font-size: 14px;
 }
 
-button:hover {
+.chat-send-button:hover {
   background-color: #009a00;
-}
-
-div > input,
-div > button {
-  margin: 10px;
 }
