@@ -1,26 +1,22 @@
 import { useState, useEffect, useRef } from "react";
-import { v4 as uuidv4 } from "uuid"; // UUIDを生成するためのライブラリ
-import "./App.css"; // CSSをインポート
+import "./App.css";
 
 function App() {
   const [messages, setMessages] = useState<{ id: string; text: string }[]>([]);
   const [inputMsg, setInputMsg] = useState("");
   const wsRef = useRef<WebSocket | null>(null);
-  const clientId = useRef(uuidv4()); // クライアントごとに一意のIDを生成
+  const clientId = useRef<string>(crypto.randomUUID()); // 初期値としてUUIDを生成
 
   useEffect(() => {
-    const ws = new WebSocket(
-      "wss://real-time-app-f218663aca6f.herokuapp.com/ws"
-    );
+    const ws = new WebSocket("wss://your-websocket-server/ws");
     wsRef.current = ws;
 
     // サーバーからメッセージを受信
     ws.onmessage = (event) => {
-      const receivedData = JSON.parse(event.data); // JSON形式で受信
+      const receivedData = JSON.parse(event.data);
       setMessages((prev) => [...prev, receivedData]);
     };
 
-    // WebSocket接続が切断されたとき
     ws.onclose = () => {
       console.log("WebSocket接続が切断されました");
     };
@@ -33,9 +29,9 @@ function App() {
   // メッセージ送信
   const handleSend = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      const message = { id: clientId.current, text: inputMsg }; // IDを付与したメッセージ
-      wsRef.current.send(JSON.stringify(message)); // サーバーにJSON形式で送信
-      setInputMsg(""); // 入力欄をクリア
+      const message = { id: clientId.current, text: inputMsg };
+      wsRef.current.send(JSON.stringify(message));
+      setInputMsg("");
     } else {
       console.error("WebSocketが接続されていません");
     }
@@ -49,7 +45,7 @@ function App() {
           <div
             key={index}
             className={`message ${
-              msg.id === clientId.current ? "sent" : "received" // 自分のIDに基づいて区別
+              msg.id === clientId.current ? "sent" : "received"
             }`}
           >
             {msg.text}

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
@@ -9,23 +9,67 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// 接続されたクライアントを管理するマップ
-var clients = make(map[*websocket.Conn]bool)
+// メッセージ構造体
+type Message struct {
+	ID   string `json:"id"`
+	Text string `json:"text"`
+}
 
-// メッセージをブロードキャストするためのチャネル
-var broadcast = make(chan Message)
-
-// WebSocketのアップグレード用
+// WebSocketアップグレード用
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		return true // CORSを許可
+		return true // 開発中のCORS許可
 	},
 }
 
-// メッセージ構造体
-type Message struct {
-	ID      string `json:"id"`
-	Message string `json:"text"`
+// データベース接続
+var db *sql.DB
+
+func initDB() {
+	var err error
+	db, err = sql.Open("sqlite3", "./chat.db")
+	if err != nil {
+		log.Fatal("データベース接続エラー:", err)
+	}
+
+	// メッセージテーブル作成
+	createTableQuery := `
+	CREATE TABLE IF NOT EXISTS messages (
+		id TEXT,
+		text TEXT
+	);`
+	_, err = db.Exec(createTableQuery)
+	if err != nil {
+		log.Fatal("テーブル作成エラー:", err)
+	}
+}
+
+// メッセージをデータベースに保存
+func saveMessage(msg Message) {
+	_, err := db.Exec("INSERT INTO messages (id, text) VALUES (?, ?)", msg.ID, msg.Text)
+	if err != nil {
+		log.Println("メッセージ保存エラー:", err)
+	}
+}
+
+// 過去のメッセージを取得
+func loadMessages() ([]Message, error) {
+	rows, err := db.Query("SELECT id, text FROM messages")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var messages []Message
+	for rows.Next() {
+		var msg Message
+		err := rows.Scan(&msg.ID, &msg.Text)
+		if err != nil {
+			return nil, err
+		}
+		messages = append(messages, msg)
+	}
+	return messages, nil
 }
 
 // WebSocketハンドラー
@@ -37,35 +81,33 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	// 新しいクライアントを登録
-	clients[conn] = true
-	log.Println("クライアントが接続しました")
+	// 過去のメッセージを送信
+	messages, err := loadMessages()
+	if err == nil {
+		for _, msg := range messages {
+			err := conn.WriteJSON(msg)
+			if err != nil {
+				log.Println("過去メッセージ送信エラー:", err)
+				break
+			}
+		}
+	}
 
-	// クライアントからのメッセージを受信
+	// 新しいメッセージの処理
 	for {
 		var msg Message
-		err := conn.ReadJSON(&msg) // JSON形式でメッセージを受信
+		err := conn.ReadJSON(&msg)
 		if err != nil {
 			log.Println("メッセージ受信エラー:", err)
-			delete(clients, conn) // クライアントを削除
 			break
 		}
-		log.Printf("受信メッセージ: %+v\n", msg)
 
-		// メッセージをブロードキャストチャネルに送信
-		broadcast <- msg
-	}
-}
+		// メッセージを保存
+		saveMessage(msg)
 
-// メッセージを全クライアントにブロードキャストする
-func handleBroadcast() {
-	for {
-		// ブロードキャストチャネルからメッセージを受信
-		msg := <-broadcast
-
-		// 登録されたすべてのクライアントに送信
+		// メッセージを全クライアントに送信
 		for client := range clients {
-			err := client.WriteJSON(msg) // JSON形式で送信
+			err := client.WriteJSON(msg)
 			if err != nil {
 				log.Println("メッセージ送信エラー:", err)
 				client.Close()
@@ -75,17 +117,18 @@ func handleBroadcast() {
 	}
 }
 
-func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		log.Fatal("$PORT must be set")
-	}
+var clients = make(map[*websocket.Conn]bool)
 
-	// ブロードキャスト処理をゴルーチンで起動
-	go handleBroadcast()
+func main() {
+	initDB()
 
 	http.HandleFunc("/ws", handleWebSocket)
 
-	fmt.Printf("WebSocketサーバー起動: http://localhost:%s/ws\n", port)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("サーバー起動: http://localhost:%s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
