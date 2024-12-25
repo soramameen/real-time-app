@@ -12,7 +12,9 @@ function App() {
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8080/ws");
+    const ws = new WebSocket(
+      "https://real-time-app-f218663aca6f.herokuapp.com/ws"
+    );
     wsRef.current = ws;
 
     ws.onmessage = (event) => {
