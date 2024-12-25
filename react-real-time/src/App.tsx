@@ -5,7 +5,7 @@ function App() {
   const [messages, setMessages] = useState<{ id: string; text: string }[]>([]);
   const [inputMsg, setInputMsg] = useState("");
   const wsRef = useRef<WebSocket | null>(null);
-  const clientId = useRef<string>(crypto.randomUUID()); // 初期値としてUUIDを生成
+  const clientId = useRef<string>(crypto.randomUUID()); // 一意のIDを生成
 
   useEffect(() => {
     const ws = new WebSocket(
@@ -16,7 +16,7 @@ function App() {
     // サーバーからメッセージを受信
     ws.onmessage = (event) => {
       const receivedData = JSON.parse(event.data);
-      setMessages((prev) => [...prev, receivedData]);
+      setMessages((prev) => [...prev, receivedData]); // サーバーから受信したメッセージを追加
     };
 
     ws.onclose = () => {
@@ -28,12 +28,17 @@ function App() {
     };
   }, []);
 
-  // メッセージ送信
   const handleSend = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       const message = { id: clientId.current, text: inputMsg };
+
+      // 即座に自分のメッセージを表示
+      setMessages((prev) => [...prev, message]);
+
+      // サーバーにメッセージを送信
       wsRef.current.send(JSON.stringify(message));
-      setInputMsg("");
+
+      setInputMsg(""); // 入力欄をクリア
     } else {
       console.error("WebSocketが接続されていません");
     }
