@@ -25,7 +25,7 @@ var upgrader = websocket.Upgrader{
 // メッセージ構造体
 type Message struct {
 	ID      string `json:"id"`
-	Message string `json:"message"`
+	Message string `json:"text"`
 }
 
 // WebSocketハンドラー
