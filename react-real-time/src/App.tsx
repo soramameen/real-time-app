@@ -1,14 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import "./App.css";
-
-interface Message {
-  type: "sent" | "received";
-  text: string;
-}
 
 function App() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputMsg, setInputMsg] = useState<string>("");
+  const [messages, setMessages] = useState<string[]>([]);
+  const [inputMsg, setInputMsg] = useState("");
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -17,11 +11,12 @@ function App() {
     );
     wsRef.current = ws;
 
+    // サーバーからメッセージを受信
     ws.onmessage = (event) => {
-      const data = event.data;
-      setMessages((prev) => [...prev, { type: "received", text: data }]);
+      setMessages((prev) => [...prev, event.data]);
     };
 
+    // WebSocket接続が切断されたとき
     ws.onclose = () => {
       console.log("WebSocket接続が切断されました");
     };
@@ -31,13 +26,10 @@ function App() {
     };
   }, []);
 
+  // メッセージ送信
   const handleSend = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      // サーバーにメッセージを送信
       wsRef.current.send(inputMsg);
-
-      // 自分で送ったメッセージはサーバーからの受信を待たずに表示
-      setMessages((prev) => [...prev, { type: "sent", text: inputMsg }]);
       setInputMsg(""); // 入力欄をクリア
     } else {
       console.error("WebSocketが接続されていません");
@@ -45,30 +37,18 @@ function App() {
   };
 
   return (
-    <div className="chat-container">
-      <header className="chat-header">LINE風チャット</header>
-      <div className="chat-messages">
+    <div>
+      <div>
         {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`message ${msg.type === "sent" ? "sent" : "received"}`}
-          >
-            {msg.text}
-          </div>
+          <p key={index}>{msg}</p>
         ))}
       </div>
-      <footer className="chat-input">
-        <input
-          type="text"
-          value={inputMsg}
-          onChange={(e) => setInputMsg(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSend();
-          }}
-          placeholder="メッセージを入力"
-        />
-        <button onClick={handleSend}>送信</button>
-      </footer>
+      <input
+        type="text"
+        value={inputMsg}
+        onChange={(e) => setInputMsg(e.target.value)}
+      />
+      <button onClick={handleSend}>送信</button>
     </div>
   );
 }
