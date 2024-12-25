@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import "./App.css"; // CSSファイルをインポート
+import "./App.css"; // CSSをインポート
 
 function App() {
   const [messages, setMessages] = useState<string[]>([]);
@@ -31,7 +31,6 @@ function App() {
   const handleSend = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(inputMsg);
-      setMessages((prev) => [...prev, `You: ${inputMsg}`]); // 自分のメッセージを表示
       setInputMsg(""); // 入力欄をクリア
     } else {
       console.error("WebSocketが接続されていません");
@@ -39,29 +38,19 @@ function App() {
   };
 
   return (
-    <div className="chat-container">
-      <div className="chat-header">LINE風チャット</div>
-      <div className="chat-messages">
+    <div>
+      <div>
         {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`message ${
-              msg.startsWith("You:") ? "sent" : "received"
-            }`}
-          >
-            {msg}
-          </div>
+          <p key={index}>{msg}</p>
         ))}
       </div>
-      <div className="chat-input">
-        <input
-          type="text"
-          value={inputMsg}
-          onChange={(e) => setInputMsg(e.target.value)}
-          placeholder="メッセージを入力"
-        />
-        <button onClick={handleSend}>送信</button>
-      </div>
+      <input
+        type="text"
+        value={inputMsg}
+        onChange={(e) => setInputMsg(e.target.value)}
+        placeholder="メッセージを入力"
+      />
+      <button onClick={handleSend}>送信</button>
     </div>
   );
 }

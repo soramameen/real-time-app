@@ -1,86 +1,76 @@
 /* 全体レイアウト */
-.chat-container {
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background-color: #e5ddd5; /* LINE風の背景色 */
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+div {
   width: 100%;
   max-width: 400px;
-  margin: 0 auto;
-  height: 100vh;
-  background-color: #e5ddd5; /* LINE風の背景色 */
-  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-/* ヘッダー */
-.chat-header {
-  background-color: #00c300; /* LINEのヘッダー色 */
-  color: white;
-  text-align: center;
-  padding: 10px;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-/* メッセージエリア */
-.chat-messages {
+div > div {
   flex: 1;
   padding: 10px;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  background-color: #e5ddd5;
 }
 
-/* メッセージスタイル */
-.message {
+p {
   max-width: 70%;
+  margin: 5px 0;
   padding: 10px;
-  border-radius: 8px;
-  font-size: 14px;
-  line-height: 1.4;
+  border-radius: 10px;
   word-wrap: break-word;
 }
 
-.message.sent {
-  align-self: flex-end;
-  background-color: #dcf8c6; /* 自分のメッセージの色 */
-  color: black;
-}
-
-.message.received {
+p:nth-child(odd) {
   align-self: flex-start;
   background-color: white;
-  color: black;
   border: 1px solid #ddd;
 }
 
-/* 入力エリア */
-.chat-input {
-  display: flex;
-  padding: 10px;
-  background-color: #f0f0f0;
-  gap: 10px;
-  align-items: center;
+p:nth-child(even) {
+  align-self: flex-end;
+  background-color: #dcf8c6;
 }
 
-.chat-input input {
-  flex: 1;
+input {
   padding: 10px;
+  font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 20px;
+  flex: 1;
+  margin-right: 10px;
   outline: none;
-  font-size: 14px;
 }
 
-.chat-input button {
+button {
   padding: 10px 15px;
-  background-color: #00c300; /* 送信ボタンの色 */
+  background-color: #00c300;
   color: white;
   border: none;
   border-radius: 20px;
   cursor: pointer;
-  font-size: 14px;
 }
 
-.chat-input button:hover {
+button:hover {
   background-color: #009a00;
+}
+
+div > input,
+div > button {
+  margin: 10px;
 }
