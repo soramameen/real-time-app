@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/websocket"
 	_ "github.com/mattn/go-sqlite3"
@@ -33,23 +34,36 @@ func initDB() {
 	if err != nil {
 		log.Fatal("データベース接続エラー:", err)
 	}
-
 	// メッセージテーブル作成
 	createTableQuery := `
 	CREATE TABLE IF NOT EXISTS messages (
-		id TEXT,
-		name TEXT,
-		text TEXT
+			id TEXT,
+			name TEXT,
+			text TEXT
 	);`
 	_, err = db.Exec(createTableQuery)
 	if err != nil {
 		log.Fatal("テーブル作成エラー:", err)
 	}
 }
+func resetDB() {
+	_, err := db.Exec(`
+		DROP TABLE IF EXISTS messages;
+		CREATE TABLE messages (
+			id TEXT,
+			name TEXT,
+			text TEXT
+		);
+	`)
+	if err != nil {
+		log.Fatal("データベースリセットエラー:", err)
+	}
+	log.Println("データベースを初期化しました")
+}
 
 // メッセージをデータベースに保存
 func saveMessage(msg Message) {
-	_, err := db.Exec("INSERT INTO messages (id, text) VALUES (?, ?)", msg.ID, msg.Text)
+	_, err := db.Exec("INSERT INTO messages (id,name, text) VALUES (?,?, ?)", msg.ID,msg.Name ,msg.Text)
 	if err != nil {
 		log.Println("メッセージ保存エラー:", err)
 	}
@@ -57,7 +71,7 @@ func saveMessage(msg Message) {
 
 // 過去のメッセージを取得
 func loadMessages() ([]Message, error) {
-	rows, err := db.Query("SELECT id, text FROM messages")
+	rows, err := db.Query("SELECT id, name,text FROM messages")
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +80,7 @@ func loadMessages() ([]Message, error) {
 	var messages []Message
 	for rows.Next() {
 		var msg Message
-		err := rows.Scan(&msg.ID, &msg.Text)
+		err := rows.Scan(&msg.ID,&msg.Name, &msg.Text)
 		if err != nil {
 			return nil, err
 		}
@@ -83,19 +97,31 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer conn.Close()
-
-	// 過去のメッセージを送信
-	messages, err := loadMessages()
-	if err == nil {
-		for _, msg := range messages {
-			err := conn.WriteJSON(msg)
-			if err != nil {
-				log.Println("過去メッセージ送信エラー:", err)
+	clients[conn] = true
+	defer delete(clients, conn) // 接続終了時に削除
+	go func() {
+		for {
+			if err := conn.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(time.Second)); err != nil {
+				log.Println("Ping送信エラー:", err)
+				conn.Close()
+				delete(clients, conn)
 				break
 			}
+			time.Sleep(30 * time.Second)
+		}
+	}()
+
+	messages, err := loadMessages()
+if err == nil {
+	for _, msg := range messages {
+		log.Printf("送信する過去メッセージ: %+v\n", msg) // デバッグ用
+		err := conn.WriteJSON(msg)
+		if err != nil {
+			log.Println("過去メッセージ送信エラー:", err)
+			break
 		}
 	}
-
+}
 	// 新しいメッセージの処理
 	for {
 		var msg Message
@@ -104,7 +130,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			log.Println("メッセージ受信エラー:", err)
 			break
 		}
-
+		log.Printf("受信したメッセージ: %+v\n", msg) // デバッグ用
 		// メッセージを保存
 		saveMessage(msg)
 
@@ -124,6 +150,7 @@ var clients = make(map[*websocket.Conn]bool)
 
 func main() {
 	initDB()
+	resetDB() // データベースを初期化
 
 	http.HandleFunc("/ws", handleWebSocket)
 
