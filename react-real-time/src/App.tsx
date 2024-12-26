@@ -19,6 +19,7 @@ function App() {
     // サーバーからメッセージを受信
     ws.onmessage = (event) => {
       const receivedData = JSON.parse(event.data);
+      console.log("受信したデータ:", receivedData);
       setMessages((prev) => [...prev, receivedData]); // サーバーから受信したメッセージを追加
     };
 
@@ -33,7 +34,7 @@ function App() {
 
   const handleSend = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      const message = { id: clientId.current, name, text: inputMsg }; // 名前を含むメッセージ
+      const message = { id: clientId.current, name: name, text: inputMsg }; // 名前を含むメッセージ
       wsRef.current.send(JSON.stringify(message)); // サーバーに送信
       setMessages((prev) => [...prev, message]); // 自分のメッセージを即座に表示
       setInputMsg("");
@@ -75,9 +76,7 @@ function App() {
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`message ${
-              msg.id === clientId.current ? "sent" : "received"
-            }`}
+            className={`message ${msg.name === name ? "sent" : "received"}`}
           >
             <span className="message-name">{msg.name}</span>: {msg.text}
           </div>
