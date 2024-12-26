@@ -12,7 +12,9 @@ function App() {
   const clientId = useRef<string>(crypto.randomUUID()); // 一意のIDを生成
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8080/ws");
+    const ws = new WebSocket(
+      "wss://real-time-app-f218663aca6f.herokuapp.com/ws"
+    );
     wsRef.current = ws;
 
     ws.onmessage = (event) => {
