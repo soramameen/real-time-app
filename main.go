@@ -13,6 +13,7 @@ import (
 // メッセージ構造体
 type Message struct {
 	ID   string `json:"id"`
+	Name string `json:"name"`
 	Text string `json:"text"`
 }
 
@@ -37,6 +38,7 @@ func initDB() {
 	createTableQuery := `
 	CREATE TABLE IF NOT EXISTS messages (
 		id TEXT,
+		name TEXT,
 		text TEXT
 	);`
 	_, err = db.Exec(createTableQuery)
