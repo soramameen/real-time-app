@@ -150,7 +150,7 @@ var clients = make(map[*websocket.Conn]bool)
 
 func main() {
 	initDB()
-	resetDB() // データベースを初期化
+	// resetDB() // データベースを初期化
 
 	http.HandleFunc("/ws", handleWebSocket)
 
