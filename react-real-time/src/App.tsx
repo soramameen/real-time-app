@@ -20,7 +20,10 @@ function App() {
     ws.onmessage = (event) => {
       const receivedData = JSON.parse(event.data);
       console.log("受信したデータ:", receivedData);
-      setMessages((prev) => [...prev, receivedData]);
+      // 自分が送信したメッセージでなければ追加
+      if (receivedData.id !== clientId.current) {
+        setMessages((prev) => [...prev, receivedData]);
+      }
     };
 
     ws.onclose = () => {
